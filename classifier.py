@@ -76,6 +76,5 @@ class LLM:
 
 
 if __name__ == "__main__":
-    os.environ['KMP_DUPLICATE_LIB_OK']='True'
     model = LLM(model="clip")
     model.classify()

@@ -1,6 +1,6 @@
 import random
-import langchain
 import os
+from llm import LLM
 
 '''This approach simple takes the middle frame from each questions, 
 uses CLIP to classify that immage, and passes that result plus the quesiton into an LLM
@@ -13,36 +13,59 @@ class Baseline_Test():
         self.answers = answers
         self.answer_choices = answer_choices
 
-    def sample(self):
+    def sample(self, num_samples):
         # Randomly get number of indices to sample
-        num_samples = random.randint(0, len(self.questions))
+        num_samples = min(num_samples, len(self.questions))
         # Randomly sample indices
         indices = random.sample(range(len(self.questions)), num_samples)
         # Return the questions, frames, answers, and answer choices at those indices
-        return self.questions[indices], self.frames[indices], self.answers[indices], self.answer_choices[indices]
+        return ([self.questions[i] for i in indices], 
+               [self.frames[i] for i in indices],   
+               [self.answers[i] for i in indices], 
+               [self.answer_choices[i] for i in indices])
     
-    def extract_frame(frame_list):
-        #Extract the frame given the question and the id 
+    def extract_frame(self, frame_list=[]):
+        #Extract the relevant frames given the frame list
         return None
 
-    def classify_frame(frame):
+    def classify_frame(self, frame):
         #Pass frame into CLIP and retrieve result
         if frame == None:
             return "dummy result"
 
-    def answer_question(question, answer_choices, clip_result):
+    def answer_question(self, model, question, answer_choices, clip_result):
         #Pass question and CLIP result to GPT and retrieve answer
-        pass
+        model.initialize(question, clip_result, answer_choices)
+        chosen_answer = model.answer(show_choices=True)
+        return chosen_answer
 
-    def evaluate_answer():
+    def evaluate_answer(self, chosen_answer, correct_answer):
         # Evaluate the answer compared to the actual answer
-        pass
+        print("Chosen answer: ", chosen_answer)
+        print("Correct answer: ", correct_answer)
+        if correct_answer in chosen_answer:
+            print("Correct!")
+        else:
+            print("Incorrect!")
 
-    def run_baseline(self):
+    def run_baseline(self, model_name="openai"):
         #Run the baseline model
-        sampled_questions, sampled_frames, sampled_answers, sampled_answer_choices = self.sample()
+        model = LLM(model=model_name)
+        sampled_questions, sampled_frames, sampled_answers, sampled_answer_choices = self.sample(5)
         for i in range(len(sampled_questions)):
-            frame = self.extract_frame(sampled_frames[i])
+            print(sampled_frames[i])
+            frame = self.extract_frame(frame_list=sampled_frames[i])
             clip_result = self.classify_frame(frame)
-            chosen_answer = self.answer_question(sampled_questions[i], sampled_answer_choices[i], clip_result)
+            chosen_answer = self.answer_question(model, sampled_questions[i], sampled_answer_choices[i], clip_result)
             self.evaluate_answer(chosen_answer, sampled_answers[i])
+
+if __name__ == "__main__":
+    # Testing code
+    questions = ["how many people am I talking with"]
+    frames = [[2]]
+    answers = ["two"]
+    answer_choices = [["zero", "one", "two", "three", "four"]]
+    # Create the baseline model
+    baseline = Baseline_Test(questions, frames, answers, answer_choices)
+    # Run the baseline model
+    baseline.run_baseline()

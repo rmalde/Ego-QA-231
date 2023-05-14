@@ -172,3 +172,4 @@ cython_debug/
 #Project Specific
 frames/
 qa_data.json
+cs231/

@@ -56,6 +56,8 @@ class Preprocessor:
             questions = []
             answers = []
             frames = []
+            #newline
+            answer_choices = []
 
             for datapoint in tqdm(metadata):   # {video, cam, start, end, question, answer, a1, a2, a3, a4, a5, label, question_encode, video_cam, a1_encoder, a2_encoder, a3_encoder, a4_encoder, a5_encoder}
                 #build video frames tensor
@@ -65,6 +67,14 @@ class Preprocessor:
                     frames.append(frames_tensor)
                     questions.append(datapoint['question'])
                     answers.append(datapoint['answer'])
+                    #newline
+                    answer_list = []
+                    for i in range(1,6):
+                        try:
+                            answer_list.append(datapoint[f'a{i}'])
+                        except KeyError:
+                            answer_list.append('')
+                    answer_choices.append(answer_list)
                 except FileNotFoundError:  #skip any files that are not in the dataset 
                     continue
 
@@ -74,7 +84,7 @@ class Preprocessor:
         print(f"Initial Dataset Length: {N}")
         print(f"Processed Dataset Length: {len(frames)}")
         print(f"Percent used: {round(len(frames) / N * 100)}%")
-        return (questions, frames, answers)
+        return (questions, frames, answers, answer_choices)
             
 
 
@@ -83,5 +93,5 @@ if __name__ == "__main__":
     frames_dir_path = 'data/frames/'
 
     preprocessor = Preprocessor(data_json_path, frames_dir_path, PreprocessParams)
-    questions, frames, answers = preprocessor.create_dataset()
+    questions, frames, answers, answer_choices = preprocessor.create_dataset()
     

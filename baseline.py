@@ -1,6 +1,7 @@
 import random
 import os
 from llm import LLM
+from classifier import Classifier
 
 '''This approach simple takes the middle frame from each questions, 
 uses CLIP to classify that immage, and passes that result plus the quesiton into an LLM
@@ -28,10 +29,12 @@ class Baseline_Test():
         #Extract the relevant frames given the frame list
         return None
 
-    def classify_frame(self, frame):
+    def classify_frame(self, frame, model):
         #Pass frame into CLIP and retrieve result
         if frame == None:
             return "dummy result"
+        else:
+            result = model.classify(frame)
 
     def answer_question(self, model, question, answer_choices, clip_result):
         #Pass question and CLIP result to GPT and retrieve answer
@@ -48,9 +51,10 @@ class Baseline_Test():
         else:
             print("Incorrect!")
 
-    def run_baseline(self, model_name="openai"):
+    def run_baseline(self, model_name="openai", classifier_name="clip"):
         #Run the baseline model
         model = LLM(model=model_name)
+        model = Classifier(model=classifier_name)
         sampled_questions, sampled_frames, sampled_answers, sampled_answer_choices = self.sample(5)
         for i in range(len(sampled_questions)):
             print(sampled_frames[i])

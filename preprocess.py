@@ -74,7 +74,7 @@ class Preprocessor:
         print(f"Initial Dataset Length: {N}")
         print(f"Processed Dataset Length: {len(frames)}")
         print(f"Percent used: {round(len(frames) / N * 100)}%")
-        transforms.ToPILImage()(frames[0][0]).show()
+        return (questions, frames, answers)
             
 
 
@@ -83,5 +83,5 @@ if __name__ == "__main__":
     frames_dir_path = 'data/frames/'
 
     preprocessor = Preprocessor(data_json_path, frames_dir_path, PreprocessParams)
-    preprocessor.create_dataset()
+    questions, frames, answers = preprocessor.create_dataset()
     

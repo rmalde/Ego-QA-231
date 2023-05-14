@@ -51,7 +51,7 @@ class Preprocessor:
         with open(self.data_json_path, 'r') as f:
             metadata = json.load(f)
         
-        metadata = metadata[-10:]
+        # metadata = metadata[-10:] # TEMPORARY LINE 
         if self.preprocess_params.dataset_type == "baseline":
             questions = []
             answers = []

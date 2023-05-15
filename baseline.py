@@ -3,6 +3,7 @@ import os
 from llm import LLM
 from classifier import Classifier
 
+
 '''This approach simple takes the middle frame from each questions, 
 uses CLIP to classify that immage, and passes that result plus the quesiton into an LLM
 to answer the question'''
@@ -54,7 +55,7 @@ class Baseline_Test():
     def run_baseline(self, model_name="openai", classifier_name="clip"):
         #Run the baseline model
         model = LLM(model=model_name)
-        model = Classifier(model=classifier_name)
+        classifier = Classifier(model=classifier_name)
         sampled_questions, sampled_frames, sampled_answers, sampled_answer_choices = self.sample(5)
         for i in range(len(sampled_questions)):
             print(sampled_frames[i])

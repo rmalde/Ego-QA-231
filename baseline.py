@@ -3,6 +3,8 @@ import os
 from llm import LLM
 from classifier import Classifier
 from tqdm.rich import tqdm
+import time
+import numpy as np
 
 import torchvision.transforms as transforms
 
@@ -80,6 +82,7 @@ class Baseline_Test():
             clip_result = self.classify_frame(frame, classifier)
             chosen_answer = self.answer_question(model, sampled_questions[i], sampled_answer_choices[i], clip_result, baseline_params.show_choices, baseline_params.use_clip, verbose=baseline_params.verbose)
             result = self.evaluate_answer(chosen_answer, sampled_answers[i], verbose=baseline_params.verbose)
+            time.sleep(np.random.randint(0, 5))
 
             if result:
                 numCorrect += 1

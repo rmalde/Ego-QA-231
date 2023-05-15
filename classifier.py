@@ -4,102 +4,53 @@ import langchain
 import os
 from api import *
 from datasets import load_dataset
-from transformers import CLIPProcessor, CLIPModel, GPT2TokenizerFast, ViTImageProcessor, VisionEncoderDecoderModel
+from transformers import CLIPProcessor, CLIPModel, GPT2TokenizerFast, ViTImageProcessor, VisionEncoderDecoderModel, MBart50TokenizerFast
 import torch
 import numpy as np
 import matplotlib.pyplot as plt
 from PIL import Image
 import requests
 
-# url = "http://images.cocodataset.org/val2017/000000039769.jpg"
 url = "https://raw.githubusercontent.com/michael-franke/npNLG/main/neural_pragmatic_nlg/pics/06-3DS-example.jpg"
-# url = "https://img.welt.de/img/sport/mobile102025155/9292509877-ci102l-w1024/hrubesch-rummenigge-BM-Berlin-Gijon-jpg.jpg"
-# url = "https://faroutmagazine.co.uk/static/uploads/2021/09/The-Cover-Uncovered-The-severity-of-Rage-Against-the-Machines-political-message.jpg"
-# url = "https://media.npr.org/assets/img/2022/03/13/2ukraine-stamp_custom-30c6e3889c98487086d76869f8ba6a8bfd2fd5a1.jpg"
 
-class LLM:
-    def __init__(self, model):
-        if model == "clip":
+class Classifier:
+    def __init__(self, classifier_name):
+        self.classifier_name = classifier_name
+        if classifier_name == "nlpconnect/vit-gpt2-image-captioning":
             self.model = VisionEncoderDecoderModel.from_pretrained("nlpconnect/vit-gpt2-image-captioning")
             self.image_processor = ViTImageProcessor.from_pretrained("nlpconnect/vit-gpt2-image-captioning")
             self.tokenizer       = GPT2TokenizerFast.from_pretrained("nlpconnect/vit-gpt2-image-captioning")
         else: 
             self.model = None
     
-    def classify2(self):
-        image = Image.open(requests.get(url, stream =True).raw)
-        pixel_values   = self.image_processor(image, return_tensors ="pt").pixel_values
-        plt.imshow(np.asarray(image))
-        plt.show()
+    def classify(self, image=None):
+        """
+            image is a PIL Image
+        """
+        if image is None:
+            #For testing
+            image = Image.open(requests.get(url, stream =True).raw)
+        
+        generated_text = None
 
-        generated_ids  = model.generate(
+        if self.classifier_name == "nlpconnect/vit-gpt2-image-captioning":
+            pixel_values = self.image_processor(image, return_tensors ="pt").pixel_values
+            generated_ids  = self.model.generate(
                 pixel_values,
                 do_sample=True,
                 max_new_tokens = 30,
                 top_k=5)
-        
-        generated_text = self.tokenizer.batch_decode(generated_ids, skip_special_tokens=True)[0]
-        print(generated_text)
+            generated_text = self.tokenizer.batch_decode(generated_ids, skip_special_tokens=True)[0]
+        else:
+            print("Classifier not supported")
+            raise RuntimeError
+        # Plotting Code
+        # plt.imshow(np.asarray(image))
+        # plt.show()
+
+        return generated_text
 
 
 if __name__ == "__main__":
-    model = LLM(model="clip")
-    model.classify2()
-
-    # def classify(self):
-    #     imagenette = load_dataset(
-    #         'frgfm/imagenette',
-    #         '320px',
-    #         split='validation',
-    #         revision="4d512db"
-    #     )
-    #     # show dataset info
-    #     print(imagenette)
-    #     labels = imagenette.info.features['label'].names
-    #     clip_labels = [f"a photo of a {label}" for label in labels]
-    #     model_id = "openai/clip-vit-base-patch32"
-
-    #     processor = CLIPProcessor.from_pretrained(model_id)
-    #     model = CLIPModel.from_pretrained(model_id)
-
-    #     # if you have CUDA set it to the active device like this
-    #     device = "cuda" if torch.cuda.is_available() else "cpu"
-    #     # move the model to the device
-    #     model.to(device)
-    #     print(device)
-
-    #     label_tokens = processor(
-    #         text=clip_labels,
-    #         padding=True,
-    #         images=None,
-    #         return_tensors='pt'
-    #     ).to(device)
-
-    #     # encode tokens to sentence embeddings
-    #     label_emb = model.get_text_features(**label_tokens)
-
-    #     # detach from pytorch gradient computation
-    #     label_emb = label_emb.detach().cpu().numpy()
-    #     label_emb.shape
-
-    #     # normalization
-    #     label_emb = label_emb / np.linalg.norm(label_emb, axis=0)
-    #     label_emb.min(), label_emb.max()
-
-    #     print(imagenette[0]['image'])
-
-    #     image = processor(
-    #         text=None,
-    #         images=imagenette[0]['image'],
-    #         return_tensors='pt'
-    #     )['pixel_values'].to(device)
-    #     print(image.shape)
-    #     img_emb = model.get_image_features(image)
-    #     img_emb = img_emb.detach().cpu().numpy()
-    #     scores = np.dot(img_emb, label_emb.T)
-
-    #     # get index of highest score
-    #     pred = np.argmax(scores)
-
-    #     # find text label with highest score
-    #     print(labels[pred])
+    classifier = Classifier(classifier="nlpconnect/vit-gpt2-image-captioning")
+    classifier.classify()

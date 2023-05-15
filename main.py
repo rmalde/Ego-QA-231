@@ -18,11 +18,9 @@ baseline = Baseline_Test(
     classifier_name=MainParams.classifier_name
 )
 
-baseline_params.num_samples = 570
-
 for show_choices in [True, False]:
         for use_clip in [True, False]:
-            print(f"Use clip is{use_clip} and show choices is {show_choices}")
+            print(f"Use clip: {use_clip}, show choices: {show_choices}")
             baseline_params.use_clip = use_clip
             baseline_params.show_choices = show_choices
             baseline.run_baseline(baseline_params)

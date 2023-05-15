@@ -21,5 +21,6 @@ class MainParams:
 class BaselineParams:
     use_clip = True
     show_choices = True
-    num_samples = 10
+    num_samples = 1 #TODO: This number is not affecting anything
+    verbose = True
     

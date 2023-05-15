@@ -24,6 +24,7 @@ class Baseline_Test():
         # Randomly get number of indices to sample
         num_samples = min(num_samples, len(self.questions))
         # Randomly sample indices
+        random.seed(33)
         indices = random.sample(range(len(self.questions)), num_samples)
         # Return the questions, frames, answers, and answer choices at those indices
         return ([self.questions[i] for i in indices], 
@@ -45,16 +46,17 @@ class Baseline_Test():
         clip_result =  classifier.classify(image=image)
         return clip_result
 
-    def answer_question(self, model, question, answer_choices, clip_result, show_choices=True, use_clip=True):
+    def answer_question(self, model, question, answer_choices, clip_result, show_choices=True, use_clip=True, verbose=False):
+        if verbose: print(f"Question: {question}?")
         #Pass question and CLIP result to GPT and retrieve answer
         model.initialize(question, clip_result, answer_choices)
         chosen_answer = model.answer(show_choices, use_clip)
         return chosen_answer
 
-    def evaluate_answer(self, chosen_answer, correct_answer, verbose=True):
+    def evaluate_answer(self, chosen_answer, correct_answer, verbose=False):
         # Evaluate the answer compared to the actual answer
         if verbose:
-            print("Chosen answer: ", chosen_answer)
+            print("Chosen answer: ", chosen_answer[2:])
             print("Correct answer: ", correct_answer)
         if correct_answer in chosen_answer.lower():
             if verbose: print("Correct!")
@@ -73,12 +75,11 @@ class Baseline_Test():
         classifier = Classifier(classifier_name=self.classifier_name)
         sampled_questions, sampled_frames, sampled_answers, sampled_answer_choices = self.sample(baseline_params.num_samples)
         numCorrect = 0
-
         for i in tqdm(range(len(sampled_questions))):
             frame = self.extract_frame(sampled_frames[i])
             clip_result = self.classify_frame(frame, classifier)
-            chosen_answer = self.answer_question(model, sampled_questions[i], sampled_answer_choices[i], clip_result, baseline_params.show_choices, baseline_params.use_clip)
-            result = self.evaluate_answer(chosen_answer, sampled_answers[i], verbose=False)
+            chosen_answer = self.answer_question(model, sampled_questions[i], sampled_answer_choices[i], clip_result, baseline_params.show_choices, baseline_params.use_clip, verbose=baseline_params.verbose)
+            result = self.evaluate_answer(chosen_answer, sampled_answers[i], verbose=baseline_params.verbose)
 
             if result:
                 numCorrect += 1

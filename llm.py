@@ -33,7 +33,7 @@ class LLM:
         input_variables = []
         chain_dict = {}
         if use_clip:
-            template += "Given an image about {clip_result}, "
+            template += "I am currently looking a scene in which {clip_result}. "
             chain_dict["clip_result"] = self.clip_result
             input_variables.append("clip_result")
         else:

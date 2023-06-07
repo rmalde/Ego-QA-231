@@ -25,7 +25,7 @@ class MainParams:
 class BaselineParams:
     use_clip = True
     show_choices = True
-    num_samples = 10  # TODO: This number is not affecting anything
+    num_samples = 20
     verbose = True
 
 
@@ -37,7 +37,7 @@ class CaptionerParams:
         Q = 3
         Q_Answer = 4
         Q_Cracked = 5
-    question_type = Configs.Q_Cracked
+    question_type = Configs.Q_Caption
 
 
 '''

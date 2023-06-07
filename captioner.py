@@ -87,7 +87,7 @@ class Captioner:
 
             elif self.captioner_params.question_type == CaptionerParams.Configs.Q_Cracked:
                 query = (
-                    "A person is trying to ask questions about an image to an AI model, that will then reply with the answer. However, their questions may be unclear in terms of what they are looking for. Given the following question, " + question + "and the following answers the user is expecting, " + ", ".join(choices) + ", come up with a better and more detailed question to ask the AI model"
+                    "A person is trying to ask questions about an image to an AI model, that will then reply with the answer. However, their questions may be unclear in terms of what they are looking for. Given the following question: \"" + question + "\" and the following answers the user is expecting: " + ", ".join(choices) + ". come up with a better and more detailed question to ask the AI model"
                 )
 
             generated_text = self.model.caption(

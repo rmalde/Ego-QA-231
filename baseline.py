@@ -54,14 +54,14 @@ class Baseline_Test:
         return frames_tensor[middle_frame]
 
     def caption_frame(
-        self, frame, captioner, question, verbose=False
+        self, frame, captioner, question, choices=None, verbose=False
     ):
         """
         frame (torch.tensor): shape = (C, H, W)
         """
         image = transforms.ToPILImage()(frame)
         # Pass frame into CLIP and retrieve result
-        caption = captioner.caption(image, question=question)
+        caption = captioner.caption(image, question=question, choices=choices)
         if verbose:
             print("Caption: ", caption)
         return caption
@@ -117,7 +117,7 @@ class Baseline_Test:
             frame = self.extract_frame(sampled_frames[i])
             question = sampled_questions[i]
             caption = self.caption_frame(
-                frame, captioner, question, verbose=baseline_params.verbose
+                frame, captioner, question, choices=sampled_answer_choices[i], verbose=baseline_params.verbose
             )
             chosen_answer = self.answer_question(
                 model,

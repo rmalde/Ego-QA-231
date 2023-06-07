@@ -44,7 +44,7 @@ class Captioner:
         else:
             raise RuntimeError(f"Unsupported Captioner: {captioner_name}")
 
-    def caption(self, image, question=None):
+    def caption(self, image, question=None, choices=None):
         """
         image is a PIL Image
         """
@@ -67,17 +67,32 @@ class Captioner:
             image.save(file_object, format='PNG')
             file_object.seek(0)
 
-            if self.captioner_params.use_question == False or question is None:
+            if self.captioner_params.question_type == CaptionerParams.Configs.Caption or question is None:
                 query = "what does the image describe?"
-            else:
+            elif self.captioner_params.question_type == CaptionerParams.Configs.Q_Caption:
                 query = (
                     "please describe this image verbosely according to the given question: "
                     + question + "?"
                 )
-            # print("Query: ", query)
+            elif self.captioner_params.question_type == CaptionerParams.Configs.Q:
+                query = (
+                    question + "?"
+                )
+
+            elif self.captioner_params.question_type == CaptionerParams.Configs.Q_Answer:
+                query = (
+                    question + "? Your choices are: " + ", ".join(choices) + "."
+                )
+                print("Query", query)
+
+            elif self.captioner_params.question_type == CaptionerParams.Configs.Q_Cracked:
+                query = (
+                    "A person is trying to ask questions about an image to an AI model, that will then reply with the answer. However, their questions may be unclear in terms of what they are looking for. Given the following question, " + question + "and the following answers the user is expecting, " + ", ".join(choices) + ", come up with a better and more detailed question to ask the AI model"
+                )
+
             generated_text = self.model.caption(
                 query, file_object
-            )  # TODO: also supports an OCR parameter, add this functionality
+            ) 
             
 
         else:
@@ -86,6 +101,9 @@ class Captioner:
         # Plotting Code
         # plt.imshow(np.asarray(image))
         # plt.show()
+
+        print("Query", query)
+        print("Generated Text: ", generated_text)
 
         return generated_text
 

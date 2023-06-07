@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from enum import Enum
 
 
 @dataclass(frozen=True)
@@ -27,6 +28,22 @@ class BaselineParams:
     num_samples = 10  # TODO: This number is not affecting anything
     verbose = True
 
+
 @dataclass(frozen=True)
 class CaptionerParams:
-    use_question = True
+    class Configs(Enum):
+        Caption = 1
+        Q_Caption = 2
+        Q = 3
+        Q_Answer = 4
+        Q_Cracked = 5
+    question_type = Configs.Q_Cracked
+
+
+'''
+Prompt Cap (Caption, Answer), GPT (Answer + Answer choices, guess) 
+Prompt Cap (Question+Caption, Answer), GPT (Answer + Answer choices, guess) - 50%
+PromptCap (Question, Answer), GPT (Answer + Answer Choices, guess) - 70%
+PromptCap (Question + Answer Choices, Answer) 
+PromptCap (Cracked Question, Answer), GPT (Answer + Answer Choices, guess) 
+'''

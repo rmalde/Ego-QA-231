@@ -15,8 +15,8 @@ class PreprocessParams:
 
 @dataclass(frozen=True)
 class MainParams:
-    captioner_name = "nlpconnect/vit-gpt2-image-captioning"
-    # captioner_name = "promptcap"
+    # captioner_name = "nlpconnect/vit-gpt2-image-captioning"
+    captioner_name = "promptcap"
     model_name = "openai"
 
 

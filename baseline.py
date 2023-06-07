@@ -61,7 +61,6 @@ class Baseline_Test:
         """
         image = transforms.ToPILImage()(frame)
         # Pass frame into CLIP and retrieve result
-        print("Here")
         caption = captioner.caption(image, question=question)
         if verbose:
             print("Caption: ", caption)
@@ -106,7 +105,6 @@ class Baseline_Test:
 
         model = LLM(model_name=self.model_name)
         captioner = Captioner(self.captioner_name, captioner_params)
-        print("here4")
         (
             sampled_questions,
             sampled_frames,

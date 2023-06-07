@@ -32,8 +32,14 @@ def load_real_dataset():
 def load_one_frame_real_dataset():
     img_path = "data/frames/3/PNGImages/M/00004.png"
     img = Image.open(img_path)
-    frames = [transforms.ToTensor()(img)[None, :, :, :]]
 
+    data_json_path = "data/qa_data.json"
+    frames_dir_path = "data/frames/"
+    preprocessor = Preprocessor(data_json_path, frames_dir_path, PreprocessParams)
+    questions, frames, answers, answer_choices = preprocessor.create_dataset()
+
+    print(frames[0].shape)
+    # frames = [transforms.ToTensor()(img)[None, :, :, :]]
     questions = ["how many people am I talking with"]
     answers = ["zero"]
     answer_choices = [["zero", "one", "two", "three", "four"]]
@@ -44,6 +50,7 @@ if __name__ == "__main__":
     # questions, frames, answers, answer_choices = load_one_frame_real_dataset()
     questions, frames, answers, answer_choices = load_real_dataset()
     print("dataset created")
+    print(frames[0].shape)
 
     baseline_params = BaselineParams
     captioner_params = CaptionerParams

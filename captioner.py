@@ -38,12 +38,9 @@ class Captioner:
                 "nlpconnect/vit-gpt2-image-captioning"
             )
         elif captioner_name == "promptcap":
-            print("here1")
             self.model = PromptCap("vqascore/promptcap-coco-vqa")
-            print("here2")
             if torch.cuda.is_available():
                 self.model.cuda()
-            print("here3")
         else:
             raise RuntimeError(f"Unsupported Captioner: {captioner_name}")
 
@@ -66,7 +63,6 @@ class Captioner:
         elif self.captioner_name == "promptcap":
             # promptcap needs the image to be a file, not a PIL image
             # TODO: have the dataloader give filenames rather than PIL objects
-            print("here2")
             file_object = io.BytesIO()
             image.save(file_object, format='PNG')
             file_object.seek(0)
@@ -75,13 +71,14 @@ class Captioner:
                 query = "what does the image describe?"
             else:
                 query = (
-                    "please describe this image according to the given question: "
+                    "please describe this image verbosely according to the given question: "
                     + question + "?"
                 )
+            # print("Query: ", query)
             generated_text = self.model.caption(
                 query, file_object
             )  # TODO: also supports an OCR parameter, add this functionality
-            print("here3")
+            
 
         else:
             raise RuntimeError(f"Unsupported Captioner: {self.captioner_name}")

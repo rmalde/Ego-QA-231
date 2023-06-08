@@ -21,7 +21,7 @@ class Preprocessor:
         transform = transforms.Compose(
             [
                 transforms.Resize(
-                    (self.preprocess_params.img_H, self.preprocess_params.img_H)
+                    (self.preprocess_params.img_H, self.preprocess_params.img_W)
                 ),
                 transforms.ToTensor(),
             ]

@@ -19,6 +19,7 @@ import matplotlib.pyplot as plt
 from PIL import Image
 import requests
 from promptcap import PromptCap
+from promptcap import PromptCap_VQA
 from langchain.llms import OpenAI
 
 from params import CaptionerParams
@@ -61,6 +62,10 @@ class Captioner:
                 generated_ids, skip_special_tokens=True
             )[0]
 
+            generated_text = self.model.caption(
+                query, file_object
+            ) 
+
         elif self.captioner_name == "promptcap":
             # promptcap needs the image to be a file, not a PIL image
             # TODO: have the dataloader give filenames rather than PIL objects
@@ -75,16 +80,26 @@ class Captioner:
                     "please describe this image verbosely according to the given question: "
                     + question + "?"
                 )
+
+                generated_text = self.model.caption(
+                query, file_object
+                ) 
             elif self.captioner_params.question_type == CaptionerParams.Configs.Q:
                 query = (
                     question + "?"
+                )
+                generated_text = self.model.caption(
+                    query, file_object
                 )
 
             elif self.captioner_params.question_type == CaptionerParams.Configs.Q_Answer:
                 query = (
                     question + "? Your choices are: " + ", ".join(choices) + "."
                 )
-                print("Query", query)
+
+                generated_text = self.model.caption(
+                    query, file_object
+                )
 
             elif self.captioner_params.question_type == CaptionerParams.Configs.Q_Cracked:
 
@@ -95,9 +110,29 @@ class Captioner:
                     improved_question
                 )
 
-            generated_text = self.model.caption(
-                query, file_object
-            ) 
+                generated_text = self.model.caption(
+                    query, file_object
+                )
+
+            elif self.captioner_params.question_type == CaptionerParams.Configs.VQA:
+
+                vqa_model = PromptCap_VQA(promptcap_model="vqascore/promptcap-coco-vqa", qa_model="allenai/unifiedqa-t5-base")
+
+                query = (
+                    question
+                )
+
+                generated_text = vqa_model.vqa(question, file_object)
+            
+            elif self.captioner_params.question_type == CaptionerParams.Configs.VQA_Answer:
+
+                vqa_model = PromptCap_VQA(promptcap_model="vqascore/promptcap-coco-vqa", qa_model="allenai/unifiedqa-t5-base")
+
+                query = (
+                    question
+                )
+
+                generated_text = vqa_model.vqa_multiple_choice(question, file_object, choices)
             
         else:
             raise RuntimeError(f"Unsupported Captioner: {self.captioner_name}")

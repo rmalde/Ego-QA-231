@@ -27,6 +27,7 @@ class BaselineParams:
     show_choices = True
     num_samples = 20
     verbose = True
+    n_caption_frames = 3
 
 
 @dataclass(frozen=True)

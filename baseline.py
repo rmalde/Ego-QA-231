@@ -30,7 +30,7 @@ class Baseline_Test:
         # Randomly get number of indices to sample
         num_samples = min(num_samples, len(self.questions))
         # Randomly sample indices
-        random.seed(33)
+        random.seed(34)
         indices = random.sample(range(len(self.questions)), num_samples)
         # Return the questions, frames, answers, and answer choices at those indices
         return (
@@ -40,28 +40,48 @@ class Baseline_Test:
             [self.answer_choices[i] for i in indices],
         )
 
-    def extract_frame(self, frames_tensor):
+    def extract_frames(self, frames_tensor, n_caption_frames=1):
         """_summary_
 
         Args:
             frames_tensor: shape = (n_frames, C, H, W)
+            n_caption_frames [int]: how many frames in video to return
 
         Returns:
-            one frame, shape = (C, H, W)
+            chosen_frames torch.tensor: shape = (n_caption_frames, C, H, W)
         """
-        # Extract the relevant frames given the frame list
-        middle_frame = int(len(frames_tensor) / 2)
-        return frames_tensor[middle_frame]
+        if n_caption_frames == 1:
+            # Extract the relevant frames given the frame list
+            indices = [int(len(frames_tensor) / 2)]
+        else:
+            length = len(frames_tensor)
+            indices = np.linspace(0, length-1, n_caption_frames + 2, dtype=int)
+            indices = indices[1:-1]
+            
+        return frames_tensor[indices]
 
-    def caption_frame(
-        self, frame, captioner, question, choices=None, verbose=False
+    def caption_frames(
+        self,
+        frames,
+        captioner,
+        question,
+        choices=None,
+        verbose=False,
     ):
         """
-        frame (torch.tensor): shape = (C, H, W)
+        Args: 
+            frames: torch.tensor: shape = (n_caption_frames, C, H, W)
+        
+        Returns:
+            caption: str
         """
-        image = transforms.ToPILImage()(frame)
-        # Pass frame into CLIP and retrieve result
-        caption = captioner.caption(image, question=question, choices=choices)
+        caption = ""
+        for i, frame in enumerate(frames):
+            image = transforms.ToPILImage()(frame)
+            # Pass frame into CLIP and retrieve result
+            caption += f"Timestamp{i}: "
+            caption += captioner.caption(image, question=question, choices=choices)
+            caption += ", "
         if verbose:
             print("Caption: ", caption)
         return caption
@@ -106,18 +126,22 @@ class Baseline_Test:
         model = LLM(model_name=self.model_name)
         captioner = Captioner(self.captioner_name, captioner_params)
         (
-            sampled_questions,
-            sampled_frames,
-            sampled_answers,
-            sampled_answer_choices,
+            sampled_questions,  # ["questions"]
+            sampled_frames,  # [ Tensor(n_frames, C, H, W) ]
+            sampled_answers,  # ['answers']
+            sampled_answer_choices,  # []
         ) = self.sample(baseline_params.num_samples)
 
         numCorrect = 0
         for i in tqdm(range(len(sampled_questions))):
-            frame = self.extract_frame(sampled_frames[i])
+            frames = self.extract_frames(sampled_frames[i], n_caption_frames=baseline_params.n_caption_frames)
             question = sampled_questions[i]
-            caption = self.caption_frame(
-                frame, captioner, question, choices=sampled_answer_choices[i], verbose=baseline_params.verbose
+            caption = self.caption_frames(
+                frames,
+                captioner,
+                question,
+                choices=sampled_answer_choices[i],
+                verbose=baseline_params.verbose,
             )
             chosen_answer = self.answer_question(
                 model,

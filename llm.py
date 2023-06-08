@@ -33,7 +33,7 @@ class LLM:
         input_variables = []
         chain_dict = {}
         if use_clip:
-            template += "I am currently looking a scene in which {clip_result}. "
+            template += "I am currently looking at a scene in which {clip_result}. Answer the following question: "
             chain_dict["clip_result"] = self.clip_result
             input_variables.append("clip_result")
         else:
@@ -44,7 +44,7 @@ class LLM:
         input_variables.append("question")
 
         if show_choices:
-            template += "Your answer choices are:{answer_choices}.Your answer should only include the answer choice.Even if you are unsure, only respond with one of the given answer choices. "
+            template += "Your answer choices are:{answer_choices}.Your answer should only include the answer choice.Even if you are unsure, use your best judgement and only respond with one of the given answer choices. "
             chain_dict["answer_choices"] = self.answer_choices
             input_variables.append("answer_choices")
         else:

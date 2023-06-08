@@ -48,7 +48,7 @@ class Finetune_Captioner():
             else:
                 print(name)
 
-    def transform_imgs(self, frames):
+    def transform_img(self, frame):
         mean, std = [0.5, 0.5, 0.5], [0.5, 0.5, 0.5]
         resolution = 480
         
@@ -58,7 +58,7 @@ class Finetune_Captioner():
             transforms.Normalize(mean=mean, std=std)
         ])
 
-        return torch.stack([patch_resize_transform(frame) for frame in frames])
+        return patch_resize_transform(frame)
 
 
     def finetune(self):
@@ -73,7 +73,7 @@ class Finetune_Captioner():
         dataset = FinetuneDataset(dataset_path=self.dataset_path)
 
         # Create a DataLoader
-        dataloader = DataLoader(dataset, batch_size=1, shuffle=True)
+        # dataloader = DataLoader(dataset, batch_size=2, shuffle=True)
 
         # Define loss function and optimizer
         loss_function = torch.nn.CrossEntropyLoss()
@@ -85,19 +85,17 @@ class Finetune_Captioner():
         for epoch in range(epochs):
             running_loss = 0.0
             
-            for batch in dataloader:
-                questions, frames, summaries = batch
-
-                summary_tok = self.tokenizer(summaries, padding=True, truncation=True, max_length=50, return_tensors="pt").input_ids
+            for question, frame, summary in dataset:
+                summary_tok = self.tokenizer(summary, return_tensors="pt").input_ids
 
                 #put image in the way they want
-                frames = self.transform_imgs(frames)
+                frame = self.transform_img(frame)
                 
                 # Clear gradients
                 optimizer.zero_grad()
                 
                 # Forward pass
-                outputs = self.model(questions, frames, use_img_tensor=True)
+                outputs = self.model.caption(question, frame, use_img_tensor=True)
                 print(outputs.shape, summary_tok)
                 quit()
                 loss = loss_function(outputs, summary_tok)

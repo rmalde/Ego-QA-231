@@ -16,18 +16,13 @@ class FinetuneDataset(Dataset):
         self.questions = questions
         self.frames = frames
         self.summaries = summaries
-
-        self.captioner = PromptCap("vqascore/promptcap-coco-vqa")
-        self.tokenizer = self.captioner.tokenizer
-        
-
         
     def __len__(self):
         return len(self.questions)
 
     def __getitem__(self, index):
-        tok_summary = self.tokenizer(self.summaries[index], return_tensors="pt").input_ids
-        return self.questions[index], self.frames[index], tok_summary
+        # tok_summary = self.tokenizer(self.summaries[index], return_tensors="pt").input_ids
+        return self.questions[index], self.frames[index], self.summaries[index]
 
     
 
@@ -35,6 +30,7 @@ class Finetune_Captioner():
     def __init__(self, captioner_name, dataset_path):
         if captioner_name == "promptcap":
             self.model = PromptCap("vqascore/promptcap-coco-vqa")
+            self.tokenizer = self.model.tokenizer
         else:
             raise NotImplementedError(captioner_name)
 
@@ -77,7 +73,9 @@ class Finetune_Captioner():
             running_loss = 0.0
             
             for batch in dataloader:
-                question, frame, summary_tok = batch
+                question, frame, summary = batch
+
+                summary_tok = self.tokenizer(summary, padding=True, truncation=True, max_length=50, return_tensors="pt").input_ids
 
                 #put image in the way they want
                 image = transforms.ToPILImage()(frame)

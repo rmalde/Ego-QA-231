@@ -13,6 +13,18 @@ import numpy as np
 
 from tqdm.rich import tqdm
 
+finetune_dataset_name = "finetune_dataset_blip_400"
+
+if os.path.exists(f"data/{finetune_dataset_name}.pt"):
+    print(f"Loading dataset from data/{finetune_dataset_name}.pt")
+
+    flattened_questions, flattened_frames, summaries = torch.load(f"data/{finetune_dataset_name}.pt")
+
+    for i in range(len(flattened_questions)):
+        print(f"Question: {flattened_questions[i]}, Summary: {summaries[i]}")
+
+    quit()
+
 
 # Get 3 frames per video
 def load_real_dataset():
@@ -52,10 +64,10 @@ def extract_frames(frames_tensor, n_caption_frames=1):
 
 assert len(frames) == len(questions) == len(answers)
 
-captioner = Captioner("promptcap", CaptionerParams)
+captioner = Captioner("blip", CaptionerParams)
 CaptionerParams.question_type = CaptionerParams.Configs.Caption
 
-os.environ["OPENAI_API_KEY"] = openai_key
+os.environ["OPENAI_API_KEY"] = openai_key_ronak
 llm = OpenAI(model_name="gpt-3.5-turbo")
 
 
@@ -81,16 +93,19 @@ for i in tqdm(range(len(frames))):
 
         prompt = (
             in_context_examples
-            + "Original contexts: "
+            + "Original context: "
             + caption
             + "\nQuestion: "
             + questions[i]
             + "\nAnswer: "
             + answers[i]
-            + "\nSummary:"
+            + "\nNew context:"
         )
 
         summary = llm(prompt)
+        print("Answer: ", answers[i])
+        print(f"Summary: {summary}")
+        print("-------------")
         summaries.append(summary)
 
 
@@ -100,4 +115,5 @@ for summary, caption in zip(summaries, captions):
 
 # Save the dataset
 dataset = (flattened_questions, flattened_frames, summaries)
-torch.save(dataset, "data/finetune_dataset.pt")
+torch.save(dataset, f"data/{finetune_dataset_name}.pt")
+print(f"Saved to data/{finetune_dataset_name}.pt")

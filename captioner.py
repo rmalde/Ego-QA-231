@@ -13,6 +13,7 @@ from transformers import (
     VisionEncoderDecoderModel,
     MBart50TokenizerFast,
 )
+from transformers import BlipProcessor, BlipForConditionalGeneration
 import torch
 import numpy as np
 import matplotlib.pyplot as plt
@@ -43,6 +44,9 @@ class Captioner:
             self.model = PromptCap("vqascore/promptcap-coco-vqa")
             if torch.cuda.is_available():
                 self.model.cuda()
+        elif captioner_name == "blip":
+            self.processor = BlipProcessor.from_pretrained("Salesforce/blip-image-captioning-base")
+            self.model = BlipForConditionalGeneration.from_pretrained("Salesforce/blip-image-captioning-base").to("cuda")
         else:
             raise RuntimeError(f"Unsupported Captioner: {captioner_name}")
 
@@ -56,15 +60,20 @@ class Captioner:
         if self.captioner_name == "nlpconnect/vit-gpt2-image-captioning":
             pixel_values = self.image_processor(image, return_tensors="pt").pixel_values
             generated_ids = self.model.generate(
-                pixel_values, do_sample=True, max_new_tokens=30, top_k=5
+                pixel_values, do_sample=True, max_new_tokens=50, top_k=5
             )
             generated_text = self.tokenizer.batch_decode(
                 generated_ids, skip_special_tokens=True
             )[0]
 
-            generated_text = self.model.caption(
-                query, file_object
-            ) 
+            query = question
+        
+        elif self.captioner_name == "blip":
+            inputs = self.processor(image, return_tensors="pt").to("cuda")
+            out = self.model.generate(**inputs, max_new_tokens=50)
+            generated_text = self.processor.decode(out[0], skip_special_tokens=True)
+
+            query = question
 
         elif self.captioner_name == "promptcap":
             # promptcap needs the image to be a file, not a PIL image

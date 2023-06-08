@@ -1,13 +1,44 @@
 from promptcap import PromptCap
 
 import torch
+from torch.utils.data import Dataset, DataLoader
+import torch.optim as optim
+import torchvision.transforms as transforms
+
+import io
+
+
+
+class FinetuneDataset(Dataset):
+    def __init__(self, dataset_path):
+        questions, frames, summaries  = torch.load(dataset_path)
+        assert len(questions) == len(frames) == len(summaries)
+        self.questions = questions
+        self.frames = frames
+        self.summaries = summaries
+
+        self.captioner = PromptCap("vqascore/promptcap-coco-vqa")
+        self.tokenizer = self.captioner.tokenizer
+        
+
+        
+    def __len__(self):
+        return len(self.questions)
+
+    def __getitem__(self, index):
+        tok_summary = self.tokenizer(self.summaries[index], return_tensors="pt").input_ids
+        return self.questions[index], self.frames[index], tok_summary
+
+    
 
 class Finetune_Captioner():
-    def __init__(self, captioner_name):
+    def __init__(self, captioner_name, dataset_path):
         if captioner_name == "promptcap":
             self.model = PromptCap("vqascore/promptcap-coco-vqa")
         else:
             raise NotImplementedError(captioner_name)
+
+        self.dataset_path = dataset_path
      
     def print_params(self, mode="trainable"):
         # options = ["trainable", "frozen", "all"]
@@ -27,20 +58,17 @@ class Finetune_Captioner():
             if not name.startswith('model.encoder.layers.11'):  # Adjust the condition based on your model's architecture
                 param.requires_grad = False
         
-        self.print_params(mode="trainable")
-
-        # Convert labels to tensors
-        labels = torch.tensor(labels)
+        # self.print_params(mode="trainable")
 
         # Create a TensorDataset
-        dataset = TensorDataset(input_ids, attention_mask, labels)
+        dataset = FinetuneDataset(dataset_path=self.dataset_path)
 
         # Create a DataLoader
         dataloader = DataLoader(dataset, batch_size=8, shuffle=True)
 
         # Define loss function and optimizer
         loss_function = torch.nn.CrossEntropyLoss()
-        optimizer = optim.AdamW(model.parameters(), lr=2e-5)
+        optimizer = optim.AdamW(self.model.parameters(), lr=2e-5)
 
         # Train the model
         epochs = 3
@@ -49,14 +77,22 @@ class Finetune_Captioner():
             running_loss = 0.0
             
             for batch in dataloader:
-                input_ids_batch, attention_mask_batch, labels_batch = batch
+                question, frame, summary_tok = batch
+
+                #put image in the way they want
+                image = transforms.ToPILImage()(frame)
+                file_object = io.BytesIO()
+                image.save(file_object, format='PNG')
+                file_object.seek(0)
                 
                 # Clear gradients
                 optimizer.zero_grad()
                 
                 # Forward pass
-                outputs = self.model(input_ids_batch, attention_mask=attention_mask_batch, labels=labels_batch)
-                loss = outputs.loss
+                outputs = self.model(question, file_object)
+                print(outputs.shape, summary_tok)
+                quit()
+                loss = loss_function(outputs, summary_tok)
                 
                 # Backward pass
                 loss.backward()
@@ -69,5 +105,6 @@ class Finetune_Captioner():
 
 
 if __name__ == "__main__":
-    finetune_captioner = Finetune_Captioner("promptcap")
+    dataset_path = "data/finetune_dataset_blip.pt"
+    finetune_captioner = Finetune_Captioner("promptcap", dataset_path=dataset_path)
     finetune_captioner.finetune()

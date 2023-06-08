@@ -19,6 +19,7 @@ import matplotlib.pyplot as plt
 from PIL import Image
 import requests
 from promptcap import PromptCap
+from langchain.llms import OpenAI
 
 from params import CaptionerParams
 
@@ -86,15 +87,18 @@ class Captioner:
                 print("Query", query)
 
             elif self.captioner_params.question_type == CaptionerParams.Configs.Q_Cracked:
+
+                llm = OpenAI(model_name="gpt-3.5-turbo")
+                improved_question = llm("A person is trying to ask questions about an image to an AI model, that will then reply with the answer. However, their questions may be unclear in terms of what they are looking for. Given the following question: \"" + question + "\" and the following answers the user is expecting: " + ", ".join(choices) + ". come up with a better and more detailed question to ask the AI model")
+
                 query = (
-                    "A person is trying to ask questions about an image to an AI model, that will then reply with the answer. However, their questions may be unclear in terms of what they are looking for. Given the following question: \"" + question + "\" and the following answers the user is expecting: " + ", ".join(choices) + ". come up with a better and more detailed question to ask the AI model"
+                    improved_question
                 )
 
             generated_text = self.model.caption(
                 query, file_object
             ) 
             
-
         else:
             raise RuntimeError(f"Unsupported Captioner: {self.captioner_name}")
 

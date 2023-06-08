@@ -72,7 +72,7 @@ class Preprocessor:
         with open(self.data_json_path, "r") as f:
             metadata = json.load(f)
 
-        metadata = metadata[-100:] # TEMPORARY LINE
+        metadata = metadata[:400] # TEMPORARY LINE
         questions = []
         answers = []
         frames = []

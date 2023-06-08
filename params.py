@@ -27,7 +27,7 @@ class BaselineParams:
     show_choices = True
     num_samples = 20
     verbose = True
-    n_caption_frames = 3
+    n_caption_frames = 1
 
 
 @dataclass(frozen=True)
@@ -40,7 +40,7 @@ class CaptionerParams:
         Q_Cracked = 5
         VQA = 6
         VQA_Answer = 7
-    question_type = Configs.VQA_Answer
+    question_type = Configs.Q_Caption
 
 
 '''

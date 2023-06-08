@@ -75,14 +75,18 @@ class Captioner:
 
             if self.captioner_params.question_type == CaptionerParams.Configs.Caption or question is None:
                 query = "what does the image describe?"
+
+                generated_text = self.model.caption(
+                    query, file_object
+                ) 
             elif self.captioner_params.question_type == CaptionerParams.Configs.Q_Caption:
                 query = (
-                    "please describe this image verbosely according to the given question: "
-                    + question + "?"
+                    "Describe the image in a way that helps ChatGPT answer the question: \""
+                    + question + "?\""
                 )
 
                 generated_text = self.model.caption(
-                query, file_object
+                    query, file_object
                 ) 
             elif self.captioner_params.question_type == CaptionerParams.Configs.Q:
                 query = (

@@ -114,6 +114,16 @@ class Captioner:
                     query, file_object
                 )
 
+            elif self.captioner_params.question_type == CaptionerParams.Configs.Caption_Q_Answer:
+                query = (
+                    "Describe the image in a way that helps ChatGPT answer the question: \"" +
+                    question + "?\" Where the answer choices for the question are: " + ", ".join(choices) + "."
+                )
+
+                generated_text = self.model.caption(
+                    query, file_object
+                )
+
             elif self.captioner_params.question_type == CaptionerParams.Configs.Q_Cracked:
 
                 llm = OpenAI(model_name="gpt-3.5-turbo")

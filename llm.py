@@ -12,8 +12,9 @@ class LLM:
     def __init__(self, model_name):
         # TODO: Add a "model verbosity" thing that can include an "explain your reasoning" in the prompt
         if model_name == "openai":
-            os.environ["OPENAI_API_KEY"] = openai_key
-            self.model = OpenAI(model_name="gpt-3.5-turbo")
+            os.environ["OPENAI_API_KEY"] = openai_key_ronak
+            # self.model = OpenAI(model_name="gpt-3.5-turbo")
+            self.model = OpenAI(model_name="text-davinci-003")
         else:
             self.model = None
         self.question = None

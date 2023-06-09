@@ -31,10 +31,10 @@ class FinetuneDataset(Dataset):
 class Finetune_Captioner():
     def __init__(self, captioner_name, dataset_path):
         if captioner_name == "promptcap":
-            self.model = PromptCap("vqascore/promptcap-coco-vqa")
-            self.tokenizer = self.model.tokenizer
-            # self.model = OFAModel.from_pretrained("vqascore/promptcap-coco-vqa", use_cache=True)
-            # self.tokenizer = OFATokenizer.from_pretrained("vqascore/promptcap-coco-vqa")
+            # self.model = PromptCap("vqascore/promptcap-coco-vqa")
+            # self.tokenizer = self.model.tokenizer
+            self.model = OFAModel.from_pretrained("vqascore/promptcap-coco-vqa", use_cache=True)
+            self.tokenizer = OFATokenizer.from_pretrained("vqascore/promptcap-coco-vqa")
         else:
             raise NotImplementedError(captioner_name)
 
@@ -49,7 +49,7 @@ class Finetune_Captioner():
             elif mode =="frozen":
                 if not param.requires_grad:
                     print(name)
-            else:
+            elif mode == "all":
                 print(name)
 
     def transform_img(self, frame):
@@ -97,7 +97,7 @@ class Finetune_Captioner():
         # Freeze all layers except the last trasnformer block
         trainable_params = []
         for name, param in self.model.named_parameters():
-            if not name.startswith('model.encoder.layers.11'):  # Adjust the condition based on your model's architecture
+            if not name.startswith('encoder.layers.11'):  # Adjust the condition based on your model's architecture
                 param.requires_grad = False
             else:
                 trainable_params.append(param)
@@ -124,11 +124,11 @@ class Finetune_Captioner():
                 
                 for question, frame, summary in tqdm(dataset):
                     summary_tok = self.tokenizer(summary, return_tensors="pt").input_ids
-                    # prompt_tok = self.tokenizer(question, return_tensors="pt").input_ids
+                    prompt_tok = self.tokenizer(question, return_tensors="pt").input_ids
 
                     #put image in the way they want
                     frame = self.transform_img(frame)
-                    # image = frame.unsqueeze(0)
+                    image = frame.unsqueeze(0)
 
                     
                     # Clear gradients
@@ -136,11 +136,11 @@ class Finetune_Captioner():
                     
                     num_beams, no_repeat_ngram_size, max_new_tokens = 5, 3, 50
                     # Forward pass
-                    # outputs = self.model.generate(prompt_tok, patch_images=image, 
-                    #                     num_beams=num_beams, 
-                    #                     no_repeat_ngram_size=no_repeat_ngram_size, 
-                    #                     max_new_tokens=max_new_tokens,
-                    outputs = self.model.caption(question, frame, use_img_tensor=True, mode="train")
+                    outputs = self.model.generate(prompt_tok, patch_images=image, 
+                                        num_beams=num_beams, 
+                                        no_repeat_ngram_size=no_repeat_ngram_size, 
+                                        max_new_tokens=max_new_tokens)
+                    # outputs = self.model.caption(question, frame, use_img_tensor=True, mode="train")
                     outputs = self.format_tokens_for_loss(outputs)
                     summary_tok = self.format_tokens_for_loss(summary_tok)
                     loss = loss_function(outputs, summary_tok)

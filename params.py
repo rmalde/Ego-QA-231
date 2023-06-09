@@ -37,10 +37,11 @@ class CaptionerParams:
         Q_Caption = 2
         Q = 3
         Q_Answer = 4
-        Q_Cracked = 5
-        VQA = 6
-        VQA_Answer = 7
-    question_type = Configs.Q_Caption
+        Caption_Q_Answer = 5
+        Q_Cracked = 6
+        VQA = 7
+        VQA_Answer = 8
+    question_type = Configs.Q_Answer
 
 
 '''

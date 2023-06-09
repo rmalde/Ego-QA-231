@@ -79,7 +79,7 @@ class Baseline_Test:
         for i, frame in enumerate(frames):
             image = transforms.ToPILImage()(frame)
             # Pass frame into CLIP and retrieve result
-            caption += f"Timestamp{i}: "
+            caption += f"Timestamp {i+1}: "
             caption += captioner.caption(image, question=question, choices=choices)
             caption += ", "
         if verbose:

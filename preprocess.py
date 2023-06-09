@@ -62,19 +62,24 @@ class Preprocessor:
         return filenames
 
     def create_dataset(self):
-        if os.path.exists(self.preprocess_params.dataset_save_path):
-            print(f"Loading dataset from {self.preprocess_params.dataset_save_path}")
-            dataset = torch.load(self.preprocess_params.dataset_save_path)
-            N = len(dataset[0])
-            print(f"Dataset Length: {N}")
-            return dataset
+        # if os.path.exists(self.preprocess_params.dataset_save_path):
+        #     print(f"Loading dataset from {self.preprocess_params.dataset_save_path}")
+        #     dataset = torch.load(self.preprocess_params.dataset_save_path)
+        #     N = len(dataset[0])
+        #     print(f"Dataset Length: {N}")
+        #     return dataset
 
         print(f"Building dataset of type {self.preprocess_params.dataset_type}...")
 
         with open(self.data_json_path, "r") as f:
             metadata = json.load(f)
 
-        metadata = metadata[-100:] # TEMPORARY LINE
+        # metadata = metadata[-100:] # TEMPORARY LINE
+        # metadata = metadata[-20:] # TEMPORARY LINE
+        # metadata = metadata[-40:-20] # TEMPORARY LINE
+        # metadata = metadata[-60:-40] # TEMPORARY LINE
+        # metadata = metadata[-80:-60] # TEMPORARY LINE
+        metadata = metadata[-100:-80] # TEMPORARY LINE
         questions = []
         answers = []
         frames = []

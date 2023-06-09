@@ -1,4 +1,4 @@
-from promptcap import PromptCap
+from promptcap import PromptCap, OFAModel, OFATokenizer
 
 import torch
 from torch.utils.data import Dataset, DataLoader
@@ -6,6 +6,8 @@ import torch.optim as optim
 import torchvision.transforms as transforms
 
 import io
+
+from tqdm.rich import tqdm
 
 
 
@@ -31,6 +33,8 @@ class Finetune_Captioner():
         if captioner_name == "promptcap":
             self.model = PromptCap("vqascore/promptcap-coco-vqa")
             self.tokenizer = self.model.tokenizer
+            # self.model = OFAModel.from_pretrained("vqascore/promptcap-coco-vqa", use_cache=True)
+            # self.tokenizer = OFATokenizer.from_pretrained("vqascore/promptcap-coco-vqa")
         else:
             raise NotImplementedError(captioner_name)
 
@@ -60,12 +64,43 @@ class Finetune_Captioner():
 
         return patch_resize_transform(frame)
 
+    def format_tokens_for_loss(self, tokens):
+        """_summary_
+
+        Args:
+            tokens: tensor(1, n_tokens)
+        """
+
+        # Set maximum sequence length
+        max_length = 30
+        sequence_length = tokens.shape[1]
+
+        if sequence_length < max_length:
+            # Pad the sequence with pad_token
+            padding_length = max_length - sequence_length
+            padding = torch.full((1, padding_length), 0, dtype=torch.long)
+            final_sequence = torch.cat((tokens, padding), dim=1).detach()
+            
+
+        elif sequence_length > max_length:
+            # Truncate the sequence to max_length
+            final_sequence = tokens[:, :max_length]
+
+        else:
+            final_sequence = tokens
+
+        return final_sequence.float().flatten()
+        
+
 
     def finetune(self):
         # Freeze all layers except the last trasnformer block
+        trainable_params = []
         for name, param in self.model.named_parameters():
             if not name.startswith('model.encoder.layers.11'):  # Adjust the condition based on your model's architecture
                 param.requires_grad = False
+            else:
+                trainable_params.append(param)
         
         # self.print_params(mode="trainable")
 
@@ -77,37 +112,56 @@ class Finetune_Captioner():
 
         # Define loss function and optimizer
         loss_function = torch.nn.CrossEntropyLoss()
-        optimizer = optim.AdamW(self.model.parameters(), lr=2e-5)
+        optimizer = optim.AdamW(trainable_params, lr=2e-2)
 
         # Train the model
         epochs = 3
 
-        for epoch in range(epochs):
-            running_loss = 0.0
-            
-            for question, frame, summary in dataset:
-                summary_tok = self.tokenizer(summary, return_tensors="pt").input_ids
+        try:
 
-                #put image in the way they want
-                frame = self.transform_img(frame)
+            for epoch in range(epochs):
+                running_loss = 0.0
                 
-                # Clear gradients
-                optimizer.zero_grad()
+                for question, frame, summary in tqdm(dataset):
+                    summary_tok = self.tokenizer(summary, return_tensors="pt").input_ids
+                    # prompt_tok = self.tokenizer(question, return_tensors="pt").input_ids
+
+                    #put image in the way they want
+                    frame = self.transform_img(frame)
+                    # image = frame.unsqueeze(0)
+
+                    
+                    # Clear gradients
+                    optimizer.zero_grad()
+                    
+                    num_beams, no_repeat_ngram_size, max_new_tokens = 5, 3, 50
+                    # Forward pass
+                    # outputs = self.model.generate(prompt_tok, patch_images=image, 
+                    #                     num_beams=num_beams, 
+                    #                     no_repeat_ngram_size=no_repeat_ngram_size, 
+                    #                     max_new_tokens=max_new_tokens,
+                    outputs = self.model.caption(question, frame, use_img_tensor=True, mode="train")
+                    outputs = self.format_tokens_for_loss(outputs)
+                    summary_tok = self.format_tokens_for_loss(summary_tok)
+                    loss = loss_function(outputs, summary_tok)
+                    loss = torch.tensor(loss, requires_grad=True)
+
+                    
+                    # Backward pass
+                    loss.backward()
+                    optimizer.step()
+
+                    print(self.model.parameters()[0].grad)
+                    # print(trainable_params[0].grad)
+                    print(loss.item())
+                    
+                    running_loss += loss.item()
                 
-                # Forward pass
-                outputs = self.model.caption(question, frame, use_img_tensor=True)
-                print(outputs.shape, summary_tok)
-                quit()
-                loss = loss_function(outputs, summary_tok)
-                
-                # Backward pass
-                loss.backward()
-                optimizer.step()
-                
-                running_loss += loss.item()
-            
-            epoch_loss = running_loss / len(dataloader)
-            print(f"Epoch {epoch+1}/{epochs} - Loss: {epoch_loss:.4f}")
+                epoch_loss = running_loss / len(dataset)
+                print(f"Epoch {epoch+1}/{epochs} - Loss: {epoch_loss:.4f}")
+        except KeyboardInterrupt:
+            print("Saving model weights...")
+
 
 
 if __name__ == "__main__":

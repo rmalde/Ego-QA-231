@@ -12,13 +12,17 @@ In this paper, we seek to tackle the project of Egocentric Video Question and An
 Our testing was done using Python 3.8
 To set up the environment, install necessary requirements from `requirements.txt` 
 
-```pip install -r requirements.txt```
+```
+pip install -r requirements.txt
+```
 
 ### Usage
 
 All tests can be run from `main.py`, by simple running
 
-```python main.py```
+```
+python main.py
+```
 
 Parameters are set in `params.py` to run different tests, edit this file with different parameters to run specific tests. The paper explores changing the parameter `CaptionerParams.question_type`, which can take on any value in `CaptionerParams.Configs` for different prompts for the captioning module. 
 The paper also explores the parameter `BaselineParams.n_caption_frames`, which sets how many frames are used to construct the world state. 

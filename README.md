@@ -1,7 +1,7 @@
 # A Second Pair of Eyes: Composing Foundation Models for Egocentric Video QA
 Final Project for CS231N by Ronak Malde and Arjun Karanam.
 
-[Final Paper](https://github.com/rmalde/Ego-QA-231/blob/main/231N%20Final%20Report.pdf) | [Final Poster]([url](https://github.com/rmalde/Ego-QA-231/blob/main/231N%20Final%20Poster.pdf))
+[Final Paper](https://github.com/rmalde/Ego-QA-231/blob/main/231N%20Final%20Report.pdf) | [Final Poster]([url](https://github.com/rmalde/Ego-QA-231/blob/main/231N%20Final%20Poster.pdf)
 
 ### Abstract
 
